@@ -1,0 +1,168 @@
+/* Стили экрана Модуля 2: Табло касаний (Matrix Counter) */
+/* Высококонтрастный режим для прямого солнца корта и мультитач iPadOS */
+
+.counter-view {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding: 16px;
+    background-color: #05080c;
+    box-sizing: border-box;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Верхняя панель управления */
+.counter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    margin-bottom: 12px;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.counter-title-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.counter-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #f0f6fc;
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.counter-status {
+    font-size: 13px;
+    color: #8b949e;
+    font-weight: 600;
+}
+
+.btn-nav {
+    min-height: 48px;
+    padding: 0 16px;
+    font-size: 15px;
+}
+
+.btn-round {
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 16px;
+    background-color: #1f6feb;
+}
+
+/* Сетка табло участников */
+.counter-grid {
+    display: grid;
+    gap: 12px;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Карточка спортсмена (Touch-target на весь блок) */
+.matrix-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #0d1117;
+    border: 3px solid #21262d;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-sizing: border-box;
+    transition: transform 0.05s ease, border-color 0.1s ease;
+}
+
+.matrix-card:active {
+    transform: scale(0.985);
+}
+
+/* Визуальная вспышка при ударе */
+.matrix-card.flash-impact {
+    border-color: #ffffff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.45), inset 0 0 15px var(--player-accent, #3b82f6);
+}
+
+/* Шапка карточки с именем и вычитанием */
+.card-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+    border-top: 4px solid var(--player-accent, #3b82f6);
+}
+
+.player-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Кнопка отмены/штрафа -1 */
+.btn-minus {
+    width: 44px;
+    height: 44px;
+    background-color: #21262d;
+    border: 2px solid #30363d;
+    border-radius: 10px;
+    color: #f85149;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
+.btn-minus:active {
+    background-color: #da3633;
+    color: #ffffff;
+    transform: scale(0.92);
+}
+
+/* Зона удара и счёт */
+.card-hit-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    position: relative;
+    pointer-events: none; /* Событие тапа ловит весь .matrix-card */
+}
+
+.score-value {
+    font-size: clamp(64px, 11vw, 140px);
+    font-weight: 900;
+    line-height: 0.9;
+    color: #ffffff;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+    font-variant-numeric: tabular-nums;
+}
+
+.hit-hint {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #8b949e;
+    margin-top: 8px;
+    opacity: 0.5;
+}

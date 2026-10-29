@@ -1,0 +1,168 @@
+/* Стили экрана Модуля 1: Ростер и Сессия */
+/* Эргономика прямого солнечного света корта и сенсорный ввод iPad Pro */
+
+.roster-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+    padding: 24px;
+    background-color: #0d1117;
+    color: #f0f6fc;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Шапка экрана */
+.roster-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.roster-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+}
+
+.roster-subtitle {
+    font-size: 15px;
+    color: #8b949e;
+    margin: 0;
+}
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.badge-ok {
+    background-color: #238636;
+    color: #ffffff;
+}
+
+.badge-warn {
+    background-color: #d29922;
+    color: #1a1500;
+}
+
+.roster-tools {
+    display: flex;
+    gap: 12px;
+}
+
+/* Сетка спортсменов */
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    flex: 1;
+    align-content: start;
+    overflow-y: auto;
+    padding-bottom: 24px;
+}
+
+/* Карточка спортсмена (Touch-target > 64px) */
+.athlete-card {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    min-height: 72px;
+    background-color: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 16px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.08s ease, border-color 0.15s ease, background-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.athlete-card:active {
+    transform: scale(0.97);
+}
+
+.athlete-card.is-active {
+    border-color: var(--athlete-color, #3b82f6);
+    background-color: rgba(59, 130, 246, 0.12);
+    box-shadow: 0 0 0 1px var(--athlete-color, #3b82f6);
+}
+
+.athlete-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--athlete-color, #3b82f6);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    margin-right: 16px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.athlete-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.athlete-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.athlete-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: #f0f6fc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.athlete-status {
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 2px;
+}
+
+.athlete-card.is-active .athlete-status {
+    color: #58a6ff;
+    font-weight: 600;
+}
+
+.athlete-checkbox {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 2px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.athlete-card.is-active .athlete-checkbox {
+    background-color: var(--athlete-color, #3b82f6);
+    border-color: var(--athlete-color, #3b82f6);
+}
+
+/* Нижняя панель действий */
+.roster-actions {

@@ -17,4 +17,4 @@
 ### Инфраструктура
 - Добавлен файл `.gitignore` с блокировкой `.DS_Store` и `.obsidian/`.
 - Подключен удаленный репозиторий GitHub по SSH: `git@github.com:evggetmanov-afk/tennis-pro.git`.
-- Локальная ветка `main` синхронизирована с `origin/main`.
+- Локальная ветка `main` синхронизирована с `origin/main`.- [2026-10-29 23:23] docs: sync changelog and current state with terminal workflow updates

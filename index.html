@@ -2,34 +2,1293 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Теннисный Полигон</title>
-    <link rel="stylesheet" href="css/components/counter.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Tennis Pro">
+    <meta name="format-detection" content="telephone=no">
+    <title>Теннисный Полигон (Tennis Pro)</title>
     <style>
-        * {
+        *, *::before, *::after {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #0b0f19;
-            overflow: hidden;
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow-x: hidden;
+            background-color: #05080c;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #f0f6fc;
+            -webkit-font-smoothing: antialiased;
+            touch-action: manipulation;
         }
-        #app {
-            width: 100vw;
-            height: 100vh;
+        #app-root {
+            width: 100%;
+            min-height: 100%;
         }
+
+        /* Скомпилированные стили */
+/* === css/components/counter.css === */
+/* Стили экрана Модуля 2: Табло касаний (Matrix Counter) */
+/* Высококонтрастный режим для прямого солнца корта и мультитач iPadOS */
+
+.counter-view {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+    padding: 16px;
+    background-color: #05080c;
+    box-sizing: border-box;
+    overflow: hidden;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Верхняя панель управления */
+.counter-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    margin-bottom: 12px;
+    gap: 16px;
+    flex-shrink: 0;
+}
+
+.counter-title-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.counter-title {
+    font-size: 22px;
+    font-weight: 800;
+    color: #f0f6fc;
+    margin: 0;
+    letter-spacing: -0.3px;
+}
+
+.counter-status {
+    font-size: 13px;
+    color: #8b949e;
+    font-weight: 600;
+}
+
+.btn-nav {
+    min-height: 48px;
+    padding: 0 16px;
+    font-size: 15px;
+}
+
+.btn-round {
+    min-height: 48px;
+    padding: 0 20px;
+    font-size: 16px;
+    background-color: #1f6feb;
+}
+
+/* Сетка табло участников */
+.counter-grid {
+    display: grid;
+    gap: 12px;
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+/* Карточка спортсмена (Touch-target на весь блок) */
+.matrix-card {
+    display: flex;
+    flex-direction: column;
+    background-color: #0d1117;
+    border: 3px solid #21262d;
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: manipulation;
+    box-sizing: border-box;
+    transition: transform 0.05s ease, border-color 0.1s ease;
+}
+
+.matrix-card:active {
+    transform: scale(0.985);
+}
+
+/* Визуальная вспышка при ударе */
+.matrix-card.flash-impact {
+    border-color: #ffffff;
+    box-shadow: 0 0 25px rgba(255, 255, 255, 0.45), inset 0 0 15px var(--player-accent, #3b82f6);
+}
+
+/* Шапка карточки с именем и вычитанием */
+.card-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background-color: rgba(255, 255, 255, 0.04);
+    border-bottom: 2px solid rgba(255, 255, 255, 0.06);
+    flex-shrink: 0;
+    border-top: 4px solid var(--player-accent, #3b82f6);
+}
+
+.player-name {
+    font-size: 20px;
+    font-weight: 800;
+    color: #ffffff;
+    letter-spacing: -0.3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Кнопка отмены/штрафа -1 */
+.btn-minus {
+    width: 44px;
+    height: 44px;
+    background-color: #21262d;
+    border: 2px solid #30363d;
+    border-radius: 10px;
+    color: #f85149;
+    font-size: 18px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: manipulation;
+}
+
+.btn-minus:active {
+    background-color: #da3633;
+    color: #ffffff;
+    transform: scale(0.92);
+}
+
+/* Зона удара и счёт */
+.card-hit-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    position: relative;
+    pointer-events: none; /* Событие тапа ловит весь .matrix-card */
+}
+
+.score-value {
+    font-size: clamp(64px, 11vw, 140px);
+    font-weight: 900;
+    line-height: 0.9;
+    color: #ffffff;
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.7);
+    font-variant-numeric: tabular-nums;
+}
+
+.hit-hint {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 2px;
+    color: #8b949e;
+    margin-top: 8px;
+    opacity: 0.5;
+}
+
+/* === css/components/roster.css === */
+/* Стили экрана Модуля 1: Ростер и Сессия */
+/* Эргономика прямого солнечного света корта и сенсорный ввод iPad Pro */
+
+.roster-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+    padding: 24px;
+    background-color: #0d1117;
+    color: #f0f6fc;
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* Шапка экрана */
+.roster-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+}
+
+.roster-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.5px;
+}
+
+.roster-subtitle {
+    font-size: 15px;
+    color: #8b949e;
+    margin: 0;
+}
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 13px;
+}
+
+.badge-ok {
+    background-color: #238636;
+    color: #ffffff;
+}
+
+.badge-warn {
+    background-color: #d29922;
+    color: #1a1500;
+}
+
+.roster-tools {
+    display: flex;
+    gap: 12px;
+}
+
+/* Сетка спортсменов */
+.roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+    flex: 1;
+    align-content: start;
+    overflow-y: auto;
+    padding-bottom: 24px;
+}
+
+/* Карточка спортсмена (Touch-target > 64px) */
+.athlete-card {
+    display: flex;
+    align-items: center;
+    padding: 14px 18px;
+    min-height: 72px;
+    background-color: #161b22;
+    border: 2px solid #30363d;
+    border-radius: 16px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: transform 0.08s ease, border-color 0.15s ease, background-color 0.15s ease;
+    box-sizing: border-box;
+}
+
+.athlete-card:active {
+    transform: scale(0.97);
+}
+
+.athlete-card.is-active {
+    border-color: var(--athlete-color, #3b82f6);
+    background-color: rgba(59, 130, 246, 0.12);
+    box-shadow: 0 0 0 1px var(--athlete-color, #3b82f6);
+}
+
+.athlete-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: var(--athlete-color, #3b82f6);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    font-size: 18px;
+    margin-right: 16px;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.athlete-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.athlete-info {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+}
+
+.athlete-name {
+    font-size: 19px;
+    font-weight: 700;
+    color: #f0f6fc;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.athlete-status {
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 2px;
+}
+
+.athlete-card.is-active .athlete-status {
+    color: #58a6ff;
+    font-weight: 600;
+}
+
+.athlete-checkbox {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 2px solid #30363d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 900;
+    color: #ffffff;
+    margin-left: 12px;
+    flex-shrink: 0;
+}
+
+.athlete-card.is-active .athlete-checkbox {
+    background-color: var(--athlete-color, #3b82f6);
+    border-color: var(--athlete-color, #3b82f6);
+}
+
+/* Нижняя панель действий */
+.roster-actions {
+
     </style>
 </head>
 <body>
-    <div id="app"></div>
+    <main id="app-root"></main>
+    <script>
 
-    <script type="module">
-        import { matrixCounter } from './js/modules/counter.js';
-        window.addEventListener('DOMContentLoaded', () => {
-            matrixCounter.init();
+/* --- Tennis Pro Core & Modules (Compiled Monolith) --- */
+(() => {
+    'use strict';
+
+    /* [Core: Storage] */
+    // Двухуровневое хранилище (IndexedDB + localStorage) по стандарту Tennis Pro
+// IndexedDB: постоянный ростер, профили, фото, архив тренировок
+// localStorage: оперативный кэш активной сессии на корте
+
+const DB_NAME = "tennis_pro_db";
+const DB_VERSION = 1;
+
+const STORES = {
+    ROSTER: "roster",
+    HISTORY: "history"
+};
+
+const CACHE_KEYS = {
+    ACTIVE_SESSION: "tennis_active_session_v1"
+};
+
+const DEFAULT_ROSTER = [
+    { id: "p_1", name: "Миша", color: "#3b82f6", sound: "laser", photo: null, createdAt: Date.now() },
+    { id: "p_2", name: "Саша", color: "#ef4444", sound: "coin", photo: null, createdAt: Date.now() },
+    { id: "p_3", name: "Лев", color: "#10b981", sound: "spring", photo: null, createdAt: Date.now() },
+    { id: "p_4", name: "Соня", color: "#f59e0b", sound: "default", photo: null, createdAt: Date.now() },
+    { id: "p_5", name: "Тимофей", color: "#8b5cf6", sound: "laser", photo: null, createdAt: Date.now() },
+    { id: "p_6", name: "Артём", color: "#ec4899", sound: "coin", photo: null, createdAt: Date.now() },
+    { id: "p_7", name: "Даша", color: "#06b6d4", sound: "spring", photo: null, createdAt: Date.now() },
+    { id: "p_8", name: "Марк", color: "#84cc16", sound: "default", photo: null, createdAt: Date.now() }
+];
+
+let dbInstance = null;
+
+// Инициализация IndexedDB с миграцией схемы
+function openDatabase() {
+    if (dbInstance) return Promise.resolve(dbInstance);
+
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+
+            if (!db.objectStoreNames.contains(STORES.ROSTER)) {
+                db.createObjectStore(STORES.ROSTER, { keyPath: "id" });
+            }
+
+            if (!db.objectStoreNames.contains(STORES.HISTORY)) {
+                const historyStore = db.createObjectStore(STORES.HISTORY, { keyPath: "id" });
+                historyStore.createIndex("timestamp", "timestamp", { unique: false });
+            }
+        };
+
+        request.onsuccess = (event) => {
+            dbInstance = event.target.result;
+            resolve(dbInstance);
+        };
+
+        request.onerror = (event) => {
+            console.error("IndexedDB Open Error:", event.target.error);
+            reject(event.target.error);
+        };
+    });
+}
+
+// Универсальный хелпер транзакций
+async function executeTransaction(storeName, mode, callback) {
+    const db = await openDatabase();
+    return new Promise((resolve, reject) => {
+        const transaction = db.transaction([storeName], mode);
+        const store = transaction.objectStore(storeName);
+
+        let result = null;
+        try {
+            result = callback(store);
+        } catch (err) {
+            reject(err);
+            return;
+        }
+
+        transaction.oncomplete = () => resolve(result);
+        transaction.onerror = () => reject(transaction.error);
+        transaction.onabort = () => reject(transaction.error);
+    });
+}
+
+const storage = {
+    // ------------------------------------------------------------------------
+    // 1. Уровень IndexedDB (Ростер участников)
+    // ------------------------------------------------------------------------
+
+    // Получить полный ростер. При первом запуске заполняет базу DEFAULT_ROSTER
+    async getRoster() {
+        const db = await openDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction([STORES.ROSTER], "readonly");
+            const store = tx.objectStore(STORES.ROSTER);
+            const request = store.getAll();
+
+            request.onsuccess = async () => {
+                const roster = request.result;
+                if (!roster || roster.length === 0) {
+                    await this.initDefaultRoster();
+                    resolve(DEFAULT_ROSTER);
+                } else {
+                    resolve(roster);
+                }
+            };
+            request.onerror = () => reject(request.error);
         });
+    },
+
+    // Первичная инициализация дефолтного ростера
+    async initDefaultRoster() {
+        return executeTransaction(STORES.ROSTER, "readwrite", (store) => {
+            DEFAULT_ROSTER.forEach((athlete) => store.put(athlete));
+        });
+    },
+
+    // Добавить или обновить спортсмена
+    async saveAthlete(athlete) {
+        if (!athlete.id) {
+            athlete.id = "p_" + Date.now() + "_" + Math.random().toString(36).substring(2, 6);
+        }
+        if (!athlete.updatedAt) {
+            athlete.updatedAt = Date.now();
+        }
+        await executeTransaction(STORES.ROSTER, "readwrite", (store) => {
+            store.put(athlete);
+        });
+        return athlete;
+    },
+
+    // Удалить спортсмена по id
+    async deleteAthlete(id) {
+        return executeTransaction(STORES.ROSTER, "readwrite", (store) => {
+            store.delete(id);
+        });
+    },
+
+    // ------------------------------------------------------------------------
+    // 2. Уровень IndexedDB (Архив тренировочных сессий)
+    // ------------------------------------------------------------------------
+
+    // Сохранить завершенную сессию в постоянный архив
+    async archiveSession(sessionSummary) {
+        if (!sessionSummary.id) {
+            sessionSummary.id = "sess_" + Date.now();
+        }
+        sessionSummary.timestamp = sessionSummary.timestamp || Date.now();
+
+        await executeTransaction(STORES.HISTORY, "readwrite", (store) => {
+            store.put(sessionSummary);
+        });
+        return sessionSummary;
+    },
+
+    // Получить архив всех завершенных сессий
+    async getHistory() {
+        const db = await openDatabase();
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction([STORES.HISTORY], "readonly");
+            const store = tx.objectStore(STORES.HISTORY);
+            const request = store.getAll();
+
+            request.onsuccess = () => resolve(request.result || []);
+            request.onerror = () => reject(request.error);
+        });
+    },
+
+    // ------------------------------------------------------------------------
+    // 3. Уровень localStorage (Быстрый кэш активной сессии на корте)
+    // ------------------------------------------------------------------------
+
+    // Получить активное состояние текущей тренировки
+    getActiveSession() {
+        try {
+            const raw = localStorage.getItem(CACHE_KEYS.ACTIVE_SESSION);
+            return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+            console.error("Ошибка чтения активной сессии из localStorage:", e);
+            return null;
+        }
+    },
+
+    // Сохранить текущее состояние активной тренировки (чекин, таймер, счета)
+    saveActiveSession(sessionState) {
+        try {
+            localStorage.setItem(CACHE_KEYS.ACTIVE_SESSION, JSON.stringify(sessionState));
+        } catch (e) {
+            console.error("Ошибка сохранения активной сессии в localStorage:", e);
+        }
+    },
+
+    // Сбросить активную сессию (после завершения тренировки)
+    clearActiveSession() {
+        try {
+            localStorage.removeItem(CACHE_KEYS.ACTIVE_SESSION);
+        } catch (e) {
+            console.error("Ошибка очистки активной сессии:", e);
+        }
+    },
+
+    // ------------------------------------------------------------------------
+    // 4. Защита от стирания данных Safari / Резервный экспорт и импорт
+    // ------------------------------------------------------------------------
+
+    // Формирование полного снимка базы данных в JSON
+    async createBackupSnapshot() {
+        const roster = await this.getRoster();
+        const history = await this.getHistory();
+        const activeSession = this.getActiveSession();
+
+        return {
+            app: "Tennis Pro",
+            version: DB_VERSION,
+            exportedAt: new Date().toISOString(),
+            data: {
+                roster,
+                history,
+                activeSession
+            }
+        };
+    },
+
+    // Скачивание резервного файла на iPad/Mac
+    async downloadBackupFile() {
+        const snapshot = await this.createBackupSnapshot();
+        const jsonStr = JSON.stringify(snapshot, null, 2);
+        const blob = new Blob([jsonStr], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const dateStr = new Date().toISOString().slice(0, 10);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `tennis_pro_backup_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    },
+
+    // Восстановление базы данных из JSON-объекта
+    async restoreFromBackup(snapshot) {
+        if (!snapshot || !snapshot.data || !Array.isArray(snapshot.data.roster)) {
+            throw new Error("Неверная структура файла резервной копии.");
+        }
+
+        // Восстановление ростера
+        await executeTransaction(STORES.ROSTER, "readwrite", (store) => {
+            store.clear();
+            snapshot.data.roster.forEach((athlete) => store.put(athlete));
+        });
+
+        // Восстановление истории (если есть)
+        if (Array.isArray(snapshot.data.history)) {
+            await executeTransaction(STORES.HISTORY, "readwrite", (store) => {
+                store.clear();
+                snapshot.data.history.forEach((record) => store.put(record));
+            });
+        }
+
+        // Восстановление активной сессии
+        if (snapshot.data.activeSession) {
+            this.saveActiveSession(snapshot.data.activeSession);
+        } else {
+            this.clearActiveSession();
+        }
+
+        return true;
+    }
+};
+
+    /* [Core: Audio Engine] */
+    // Процедурный звуковой движок (Web Audio API) по стандарту Tennis Pro
+// 100% Offline-first, Zero-Dependency, защита от сбоев Safari iPadOS (Audio Lifecycle)
+
+class SoundEngine {
+    constructor() {
+        this.ctx = null;
+        this.isUnlocked = false;
+        this._bindLifecycleEvents();
+    }
+
+    // Инициализация и разблокировка AudioContext по первому жесту тренера
+    unlock() {
+        if (!this.ctx) {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) {
+                console.warn("Web Audio API не поддерживается данным браузером.");
+                return;
+            }
+            this.ctx = new AudioCtx();
+        }
+
+        if (this.ctx.state === "suspended") {
+            this.ctx.resume().then(() => {
+                this.isUnlocked = true;
+            }).catch((err) => {
+                console.error("Не удалось восстановить AudioContext:", err);
+            });
+        } else if (this.ctx.state === "running") {
+            this.isUnlocked = true;
+        }
+    }
+
+    // Обработка жизненного цикла iPadOS (пробуждение экрана, разблокировка)
+    _bindLifecycleEvents() {
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                this._ensureActiveContext();
+            }
+        });
+
+        // Глобальный перехват первого тапа для гарантированного снятия блокировки автоплея
+        const unlockHandler = () => {
+            this.unlock();
+            window.removeEventListener("pointerdown", unlockHandler);
+            window.removeEventListener("keydown", unlockHandler);
+        };
+        window.addEventListener("pointerdown", unlockHandler, { passive: true });
+        window.addEventListener("keydown", unlockHandler, { passive: true });
+    }
+
+    // Проверка и восстановление контекста после прерывания (interrupted на iOS)
+    async _ensureActiveContext() {
+        if (!this.ctx) return;
+
+        if (this.ctx.state === "interrupted" || this.ctx.state === "suspended") {
+            try {
+                await this.ctx.resume();
+            } catch (e) {
+                console.warn("Повторная инициализация после interrupted...");
+                try {
+                    await this.ctx.close();
+                } catch (_) {}
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioCtx();
+                await this.ctx.resume();
+            }
+        }
+    }
+
+    // Безопасное воспроизведение процедурных эффектов
+    async play(soundType = "default") {
+        if (!this.ctx) {
+            this.unlock();
+        }
+        await this._ensureActiveContext();
+
+        if (!this.ctx || this.ctx.state !== "running") return;
+
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+
+        // Безопасная сборка аудиотракта
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+
+        // Автоматическая очистка ресурсов и защита от утечек памяти Safari
+        const cleanup = (duration) => {
+            osc.start(now);
+            osc.stop(now + duration);
+            setTimeout(() => {
+                try {
+                    osc.disconnect();
+                    gain.disconnect();
+                } catch (_) {}
+            }, (duration + 0.05) * 1000);
+        };
+
+        switch (soundType) {
+            // Лазер (быстрый свист для скоростных серий)
+            case "laser": {
+                osc.type = "sawtooth";
+                osc.frequency.setValueAtTime(1100, now);
+                osc.frequency.exponentialRampToValueAtTime(70, now + 0.14);
+                gain.gain.setValueAtTime(0.28, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+                cleanup(0.14);
+                break;
+            }
+
+            // Монета (звонкий двутональный колокольчик)
+            case "coin": {
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(1174.66, now); // D6
+                osc.frequency.setValueAtTime(1760.00, now + 0.06); // A6
+                gain.gain.setValueAtTime(0.25, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+                cleanup(0.22);
+                break;
+            }
+
+            // Пружина (восходящий тон для модулей сокровищ/бонусов)
+            case "spring": {
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.exponentialRampToValueAtTime(650, now + 0.16);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.16);
+                cleanup(0.16);
+                break;
+            }
+
+            // Штрафной гудок (тяжелый низкий диссонанс для секундных штрафов)
+            case "penalty": {
+                osc.type = "triangle";
+                osc.frequency.setValueAtTime(140, now);
+                osc.frequency.linearRampToValueAtTime(90, now + 0.25);
+                gain.gain.setValueAtTime(0.35, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                cleanup(0.25);
+                break;
+            }
+
+            // Свисток старта / финиша секундомера
+            case "whistle": {
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(2400, now);
+                osc.frequency.linearRampToValueAtTime(2200, now + 0.28);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                cleanup(0.28);
+                break;
+            }
+
+            // Трещотка («Однорукий бандит» / быстрый тактильный щелчок)
+            case "tick": {
+                osc.type = "square";
+                osc.frequency.setValueAtTime(800, now);
+                gain.gain.setValueAtTime(0.12, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
+                cleanup(0.03);
+                break;
+            }
+
+            // Стандартный тап по умолчанию
+            default: {
+                osc.type = "sine";
+                osc.frequency.setValueAtTime(520, now);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                cleanup(0.08);
+                break;
+            }
+        }
+    }
+}
+
+const soundEngine = new SoundEngine();
+
+    /* [Module 1: Roster & Session] */
+    // Модуль 1: Ростер и Сессия (Tennis Pro)
+// Управление составом спортсменов, чекин на тренировку и резервное копирование
+
+
+class RosterModule {
+    constructor(containerElement, onSessionStartCallback) {
+        this.container = containerElement;
+        this.onSessionStart = onSessionStartCallback;
+
+        this.athletes = [];
+        this.selectedAthleteIds = new Set();
+        this.isModalOpen = false;
+
+        this.init();
+    }
+
+    async init() {
+        try {
+            this.athletes = await storage.getRoster();
+            this._restoreActiveSessionCheckins();
+            this.render();
+        } catch (err) {
+            console.error("Ошибка инициализации ростера:", err);
+            this.container.innerHTML = `<div class="error-banner">Сбой загрузки базы участников</div>`;
+        }
+    }
+
+    // Восстановление чекина, если тренировка уже была начата ранее
+    _restoreActiveSessionCheckins() {
+        const session = storage.getActiveSession();
+        if (session && Array.isArray(session.participantIds)) {
+            session.participantIds.forEach((id) => this.selectedAthleteIds.add(id));
+        } else {
+            // По умолчанию выбираем первых 4 участников для быстрого старта
+            this.athletes.slice(0, 4).forEach((a) => this.selectedAthleteIds.add(a.id));
+        }
+    }
+
+    // Переключение статуса чекина спортсмена
+    toggleAthlete(athleteId) {
+        const athlete = this.athletes.find((a) => a.id === athleteId);
+        const sound = athlete && athlete.sound ? athlete.sound : "default";
+
+        if (this.selectedAthleteIds.has(athleteId)) {
+            // Минимум 2 участника на корте
+            if (this.selectedAthleteIds.size <= 2) {
+                soundEngine.play("penalty");
+                return;
+            }
+            this.selectedAthleteIds.delete(athleteId);
+            soundEngine.play("tick");
+        } else {
+            // Максимум 8 участников в одной сессии
+            if (this.selectedAthleteIds.size >= 8) {
+                soundEngine.play("penalty");
+                return;
+            }
+            this.selectedAthleteIds.add(athleteId);
+            soundEngine.play(sound);
+        }
+
+        this._persistCurrentSelection();
+        this.render();
+    }
+
+    // Синхронизация состава с кэшем активной сессии
+    _persistCurrentSelection() {
+        const selectedList = this.athletes.filter((a) => this.selectedAthleteIds.has(a.id));
+        const currentSession = storage.getActiveSession() || {};
+        storage.saveActiveSession({
+            ...currentSession,
+            participantIds: Array.from(this.selectedAthleteIds),
+            participants: selectedList,
+            updatedAt: Date.now()
+        });
+    }
+
+    // Добавление нового участника
+    async addAthlete(name, color = "#3b82f6", sound = "default") {
+        if (!name || !name.trim()) return;
+
+        const newAthlete = {
+            id: "p_" + Date.now(),
+            name: name.trim(),
+            color: color,
+            sound: sound,
+            createdAt: Date.now()
+        };
+
+        await storage.saveAthlete(newAthlete);
+        this.athletes = await storage.getRoster();
+        this.selectedAthleteIds.add(newAthlete.id);
+        this._persistCurrentSelection();
+        soundEngine.play("coin");
+        this.render();
+    }
+
+    // Запуск тренировочной сессии с выбранным составом
+    startSession() {
+        if (this.selectedAthleteIds.size < 2) {
+            soundEngine.play("penalty");
+            return;
+        }
+
+        soundEngine.play("whistle");
+        this._persistCurrentSelection();
+
+        if (typeof this.onSessionStart === "function") {
+            const selectedAthletes = this.athletes.filter((a) => this.selectedAthleteIds.has(a.id));
+            this.onSessionStart(selectedAthletes);
+        }
+    }
+
+    // Отрисовка интерфейса ростера
+    render() {
+        if (!this.container) return;
+
+        const count = this.selectedAthleteIds.size;
+        const canStart = count >= 2 && count <= 8;
+
+        this.container.innerHTML = `
+            <div class="roster-view">
+                <header class="roster-header">
+                    <div class="roster-meta">
+                        <h1 class="roster-title">Чекин участников</h1>
+                        <p class="roster-subtitle">Выбрано: <span class="badge ${canStart ? 'badge-ok' : 'badge-warn'}">${count} из 8</span> (минимум 2)</p>
+                    </div>
+                    <div class="roster-tools">
+                        <button type="button" class="btn btn-secondary btn-icon" id="btn-export-backup" title="Экспорт базы в файл">
+                            📥 Бэкап
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-icon" id="btn-add-athlete" title="Добавить участника">
+                            + Новый
+                        </button>
+                    </div>
+                </header>
+
+                <div class="roster-grid">
+                    ${this.athletes.map((athlete) => {
+                        const isChecked = this.selectedAthleteIds.has(athlete.id);
+                        return `
+                            <div class="athlete-card ${isChecked ? 'is-active' : ''}" 
+                                 data-id="${athlete.id}" 
+                                 style="--athlete-color: ${athlete.color};">
+                                <div class="athlete-avatar">
+                                    ${athlete.photo ? `<img src="${athlete.photo}" alt="${athlete.name}">` : athlete.name.slice(0, 2).toUpperCase()}
+                                </div>
+                                <div class="athlete-info">
+                                    <span class="athlete-name">${athlete.name}</span>
+                                    <span class="athlete-status">${isChecked ? 'На корте' : 'Отдых'}</span>
+                                </div>
+                                <div class="athlete-checkbox">
+                                    ${isChecked ? '✓' : ''}
+                                </div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+
+                <footer class="roster-actions">
+                    <button type="button" class="btn btn-primary btn-large" id="btn-start-training" ${canStart ? '' : 'disabled'}>
+                        Начать тренировку (${count}) ➔
+                    </button>
+                </footer>
+            </div>
+        `;
+
+        this._bindDomEvents();
+    }
+
+    // Привязка Pointer Events для исключения 300мс задержки Safari
+    _bindDomEvents() {
+        // Тапы по карточкам спортсменов
+        const cards = this.container.querySelectorAll(".athlete-card");
+        cards.forEach((card) => {
+            card.addEventListener("pointerdown", (e) => {
+                e.preventDefault();
+                const athleteId = card.getAttribute("data-id");
+                if (athleteId) this.toggleAthlete(athleteId);
+            });
+        });
+
+        // Кнопка запуска тренировки
+        const btnStart = this.container.querySelector("#btn-start-training");
+        if (btnStart) {
+            btnStart.addEventListener("pointerdown", (e) => {
+                e.preventDefault();
+                this.startSession();
+            });
+        }
+
+        // Кнопка бэкапа базы
+        const btnExport = this.container.querySelector("#btn-export-backup");
+        if (btnExport) {
+            btnExport.addEventListener("pointerdown", async (e) => {
+                e.preventDefault();
+                soundEngine.play("laser");
+                await storage.downloadBackupFile();
+            });
+        }
+
+        // Кнопка создания нового участника
+        const btnAdd = this.container.querySelector("#btn-add-athlete");
+        if (btnAdd) {
+            btnAdd.addEventListener("pointerdown", (e) => {
+                e.preventDefault();
+                const name = prompt("Имя спортсмена:");
+                if (name) {
+                    this.addAthlete(name);
+                }
+            });
+        }
+    }
+}
+
+    /* [Module 2: Matrix Counter] */
+    // Модуль 2: Табло касаний (Matrix Counter) по стандарту Tennis Pro
+// Мультикасание, аппаратный throttle (100–120 мс) по pointerId, звуковой отклик
+
+
+class MatrixCounterModule {
+    constructor(containerElement, options = {}) {
+        this.container = containerElement;
+        this.onBackToRoster = options.onBackToRoster || null;
+
+        this.participants = [];
+        this.scores = new Map(); // id -> score
+        this.lastPointerTouchTime = new Map(); // pointerId -> timestamp (Throttle)
+        this.throttleMs = 110; // Аппаратное окно отсечения дребезга тача iPad
+
+        this.init(options.participants);
+    }
+
+    init(explicitParticipants) {
+        if (Array.isArray(explicitParticipants) && explicitParticipants.length >= 2) {
+            this.participants = explicitParticipants;
+        } else {
+            const activeSession = storage.getActiveSession();
+            if (activeSession && Array.isArray(activeSession.participants) && activeSession.participants.length >= 2) {
+                this.participants = activeSession.participants;
+            } else {
+                // Если сессия не была задана, берем участников по умолчанию
+                this.participants = [
+                    { id: "p_1", name: "Миша", color: "#3b82f6", sound: "laser" },
+                    { id: "p_2", name: "Саша", color: "#ef4444", sound: "coin" }
+                ];
+            }
+        }
+
+        // Инициализируем стартовые очки (0)
+        this.participants.forEach((p) => {
+            this.scores.set(p.id, 0);
+        });
+
+        this.render();
+    }
+
+    // Обработка очка с защитой от аппаратного дребезга (Throttle)
+    handleTap(playerId, delta, pointerId, cardElement) {
+        const now = performance.now();
+        const lastTime = this.lastPointerTouchTime.get(pointerId) || 0;
+
+        // Если повторный тап по этому pointerId пришел быстрее лимита — отсекаем
+        if (delta > 0 && now - lastTime < this.throttleMs) {
+            return;
+        }
+        this.lastPointerTouchTime.set(pointerId, now);
+
+        const currentScore = this.scores.get(playerId) || 0;
+        const newScore = Math.max(0, currentScore + delta);
+        this.scores.set(playerId, newScore);
+
+        // Обновляем табло
+        const scoreEl = cardElement.querySelector(".score-value");
+        if (scoreEl) {
+            scoreEl.textContent = newScore;
+        }
+
+        const athlete = this.participants.find((p) => p.id === playerId);
+        const soundType = athlete && athlete.sound ? athlete.sound : "default";
+
+        if (delta > 0) {
+            soundEngine.play(soundType);
+            this.triggerCardFlash(cardElement);
+        } else {
+            soundEngine.play("penalty");
+        }
+    }
+
+    // Визуальная вспышка контура при касании
+    triggerCardFlash(cardElement) {
+        cardElement.classList.add("flash-impact");
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                cardElement.classList.remove("flash-impact");
+            }, 80);
+        });
+    }
+
+    // Завершение раунда с записью в архив IndexedDB
+    async finishRound() {
+        soundEngine.play("whistle");
+
+        const roundResults = this.participants.map((p) => ({
+            id: p.id,
+            name: p.name,
+            score: this.scores.get(p.id) || 0
+        }));
+
+        const summary = {
+            id: "round_" + Date.now(),
+            type: "matrix_counter",
+            timestamp: Date.now(),
+            results: roundResults
+        };
+
+        try {
+            await storage.archiveSession(summary);
+        } catch (err) {
+            console.error("Ошибка сохранения результатов раунда:", err);
+        }
+
+        if (confirm("Раунд завершен! Зафиксировать результаты и обнулить счет?")) {
+            this.scores.forEach((_, id) => this.scores.set(id, 0));
+            this.render();
+        }
+    }
+
+    // Отрисовка адаптивной сетки для 2–8 спортсменов
+    render() {
+        if (!this.container) return;
+
+        const count = this.participants.length;
+        // Расчет динамической сетки в зависимости от числа спортсменов на корте
+        let gridCols = "repeat(2, 1fr)";
+        if (count >= 5) {
+            gridCols = "repeat(4, 1fr)";
+        } else if (count >= 3) {
+            gridCols = "repeat(3, 1fr)";
+        }
+
+        this.container.innerHTML = `
+            <div class="counter-view">
+                <header class="counter-header">
+                    <button type="button" class="btn btn-secondary btn-nav" id="btn-back-roster">
+                        ❮ Ростер
+                    </button>
+                    <div class="counter-title-group">
+                        <h1 class="counter-title">Табло касаний</h1>
+                        <span class="counter-status">Участников: ${count}</span>
+                    </div>
+                    <button type="button" class="btn btn-primary btn-round" id="btn-finish-round">
+                        Завершить раунд
+                    </button>
+                </header>
+
+                <div class="counter-grid" style="grid-template-columns: ${gridCols};">
+                    ${this.participants.map((athlete) => {
+                        const score = this.scores.get(athlete.id) || 0;
+                        return `
+                            <div class="matrix-card" data-id="${athlete.id}" style="--player-accent: ${athlete.color || '#3b82f6'};">
+                                <div class="card-header-bar">
+                                    <span class="player-name">${athlete.name}</span>
+                                    <button type="button" class="btn-minus" data-action="minus" title="Снять 1 очко">-1</button>
+                                </div>
+                                <div class="card-hit-area">
+                                    <span class="score-value">${score}</span>
+                                    <span class="hit-hint">ТАП</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+            </div>
+        `;
+
+        this._bindEvents();
+    }
+
+    _bindEvents() {
+        // Обработка касаний карточек спортсменов (Pointer Events)
+        const cards = this.container.querySelectorAll(".matrix-card");
+        cards.forEach((card) => {
+            const playerId = card.getAttribute("data-id");
+
+            // Тап по всей поверхности карточки (+1)
+            card.addEventListener("pointerdown", (e) => {
+                // Если тап пришелся по кнопке вычитания, не добавляем очко
+                if (e.target.closest('[data-action="minus"]')) return;
+                e.preventDefault();
+                this.handleTap(playerId, 1, e.pointerId, card);
+            });
+
+            // Кнопка штрафа / отмены очка (-1)
+            const minusBtn = card.querySelector('[data-action="minus"]');
+            if (minusBtn) {
+                minusBtn.addEventListener("pointerdown", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.handleTap(playerId, -1, e.pointerId, card);
+                });
+            }
+        });
+
+        // Кнопка завершения раунда
+        const btnFinish = this.container.querySelector("#btn-finish-round");
+        if (btnFinish) {
+            btnFinish.addEventListener("pointerdown", (e) => {
+                e.preventDefault();
+                this.finishRound();
+            });
+        }
+
+        // Кнопка возврата в Ростер
+        const btnBack = this.container.querySelector("#btn-back-roster");
+        if (btnBack) {
+            btnBack.addEventListener("pointerdown", (e) => {
+                e.preventDefault();
+                if (typeof this.onBackToRoster === "function") {
+                    this.onBackToRoster();
+                }
+            });
+        }
+    }
+}
+
+    /* [Application Router & Bootstrap] */
+    window.addEventListener("DOMContentLoaded", () => {
+        const appContainer = document.getElementById("app-root");
+        if (!appContainer) return;
+
+        let activeScreen = null;
+
+        const showRoster = () => {
+            activeScreen = new RosterModule(appContainer, (selectedAthletes) => {
+                showCounter(selectedAthletes);
+            });
+        };
+
+        const showCounter = (participants) => {
+            activeScreen = new MatrixCounterModule(appContainer, {
+                participants: participants,
+                onBackToRoster: () => {
+                    showRoster();
+                }
+            });
+        };
+
+        // Старт с проверки сохраненной активной сессии
+        const session = storage.getActiveSession();
+        if (session && Array.isArray(session.participants) && session.participants.length >= 2) {
+            showCounter(session.participants);
+        } else {
+            showRoster();
+        }
+    });
+})();
+
     </script>
 </body>
 </html>
