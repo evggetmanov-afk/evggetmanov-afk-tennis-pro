@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Тренировочный счетчик PWA</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card-bg: #161b22;
+      --card-border: #30363d;
+      --accent: #58a6ff;
+      --success: #2ea043;
+      --danger: #da3633;
+      --warning: #d29922;
+      --text: #f0f6fc;
+      --text-muted: #8b949e;
+    }
+
+    * {
+      box-sizing: border-box;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    body {
+      margin: 0;
+      padding: env(safe-area-inset-top, 16px) env(safe-area-inset-right, 16px) env(safe-area-inset-bottom, 16px) env(safe-area-inset-left, 16px);
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(22, 27, 34, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 12px;
+      flex-shrink: 0;
+    }
+
+    .header-left, .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .timer-badge {
+      font-size: 28px;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      background: #090d13;
+      padding: 4px 14px;
+      border-radius: 10px;
+      border: 1px solid #21262d;
+    }
+
+    .btn-icon {
+      background: #21262d;
+      border: 1px solid var(--card-border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-icon:active {
+      background: #30363d;
+      transform: scale(0.96);
+    }
+
+    /* Main Area: Grid */
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 0;
+    }
+
+    .grid-container {
+      display: grid;
+      gap: 16px;
+      width: 100%;
+      height: 100%;
+      max-width: 1200px;
+      max-height: 85vh;
+      margin: auto;
+    }
+
+    /* Dynamic Grid Layouts */
+    .grid-2 { grid-template-columns: repeat(2, 1fr); grid-template-rows: 1fr; }
+    .grid-3 { grid-template-columns: repeat(3, 1fr); grid-template-rows: 1fr; }
+    .grid-4 { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); }
+    .grid-5, .grid-6 { grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, 1fr); }
+    .grid-7, .grid-8 { grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(2, 1fr); }
+
+    .card {
+      background: var(--card-bg);
+      border: 3px solid var(--card-border);
+      border-radius: 24px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 18px 12px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.08s ease, border-color 0.15s ease, background-color 0.1s ease;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .card:active {
+      transform: scale(0.97);
+    }
+
+    .card.flash {
+      border-color: #fff !important;
+      background-color: #21262d !important;
+    }
+
+    .card.debounced {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .card-avatar {
+      font-size: 56px;
+      line-height: 1;
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));
+    }
+
+    .card-name {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 90%;
+    }
+
+    .card-score {
+      font-size: 72px;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+
+    /* Footer Controls */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding-top: 10px;
+      flex-shrink: 0;
+    }
+
+    .undo-btn {
+      background: #21262d;
+      color: var(--warning);
+      border: 1px solid #30363d;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .undo-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .finish-btn {
+      background: var(--danger);
+      color: #fff;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .build-tag {
+      font-size: 11px;
+      color: #484f58;
+      font-family: monospace;
+    }
+
+    /* Modals & Overlays */
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 24px;
+      max-width: 580px;
+      width: 100%;
+      max-height: 90vh;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 800;
+      margin: 0;
+    }
+
+    /* Roster Checkin List */
+    .roster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      max-height: 40vh;
+    }
+
+    .roster-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #0d1117;
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      cursor: pointer;
+    }
+
+    .roster-item.selected {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.1);
+    }
+
+    .roster-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    /* Podium Display */
+    .podium-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .podium-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 18px;
+      background: #0d1117;
+      border-radius: 12px;
+      border: 1px solid var(--card-border);
+    }
+
+    .podium-item.p-1 { border-color: #ffd700; background: rgba(255, 215, 0, 0.08); }
+    .podium-item.p-2 { border-color: #c0c0c0; background: rgba(192, 192, 192, 0.08); }
+    .podium-item.p-3 { border-color: #cd7f32; background: rgba(205, 127, 50, 0.08); }
+
+    .podium-rank { font-size: 20px; font-weight: 800; }
+    .podium-score { font-size: 24px; font-weight: 900; color: var(--accent); }
+
+    .actions-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    .actions-row button {
+      flex: 1;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-tg { background: #0088cc; color: #fff; }
+    .btn-stories { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); color: #fff; }
+    .btn-close { background: #30363d; color: #fff; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="header-left">
+      <button class="btn-icon" id="btn-roster-open">👥 Состав (<span id="active-count">0</span>)</button>
+      <button class="btn-icon" id="btn-timer-toggle">⏱ <span id="timer-label">03:00</span></button>
+    </div>
+    <div class="header-right">
+      <span id="session-status" style="font-size: 14px; color: var(--text-muted);">Готов</span>
+      <button class="btn-icon" id="btn-settings-open">⚙️</button>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid-container" id="cards-grid"></div>
+  </main>
+
+  <footer>
+    <button class="undo-btn" id="btn-undo" disabled>↩ Отменить (-1)</button>
+    <span class="build-tag">build 2026.10.28 • v1.0.0</span>
+    <button class="finish-btn" id="btn-finish">Завершить серию</button>
+  </footer>
+
+  <!-- Modal: Чекин состава -->
+  <div class="modal" id="modal-roster">
+    <div class="modal-content">
+      <h2 class="modal-title">Выбор участников (2–8)</h2>
+      <div class="roster-list" id="roster-items-container"></div>
+      <div class="actions-row">
+        <button class="btn-close" id="btn-roster-close">Применить</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Подиум и Отчетность -->
+  <div class="modal" id="modal-podium">
+    <div class="modal-content">
+      <h2 class="modal-title">🏆 Результаты упражнения</h2>
+      <div class="podium-list" id="podium-results-container"></div>
+      <div class="actions-row">
+        <button class="btn-tg" id="btn-share-tg">В Telegram</button>
+        <button class="btn-stories" id="btn-share-stories">Stories (Instagram/FB)</button>
+      </div>
+      <button class="btn-close" id="btn-podium-restart" style="padding: 14px; border-radius: 12px; border:none; color:#fff;">Новая серия</button>
+    </div>
+  </div>
+
+  <!-- Modal: Настройки -->
+  <div class="modal" id="modal-settings">
+    <div class="modal-content">
+      <h2 class="modal-title">Настройки</h2>
+      <label style="display:flex; flex-direction:column; gap:6px; font-size:14px; color:var(--text-muted);">
+        Telegram Bot Token:
+        <input type="text" id="cfg-tg-token" style="padding:10px; border-radius:8px; border:1px solid var(--card-border); background:#0d1117; color:#fff;">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:6px; font-size:14px; color:var(--text-muted);">
+        Telegram Chat ID (канал):
+        <input type="text" id="cfg-tg-chat" style="padding:10px; border-radius:8px; border:1px solid var(--card-border); background:#0d1117; color:#fff;">
+      </label>
+      <label style="display:flex; flex-direction:column; gap:6px; font-size:14px; color:var(--text-muted);">
+        Таймер серии (секунды):
+        <input type="number" id="cfg-timer-sec" value="180" style="padding:10px; border-radius:8px; border:1px solid var(--card-border); background:#0d1117; color:#fff;">
+      </label>
+      <button class="btn-close" id="btn-settings-save" style="padding:12px; border-radius:12px; border:none; background:var(--accent); color:#fff; font-weight:700;">Сохранить</button>
+    </div>
+  </div>
+
+  <canvas id="stories-canvas" width="1080" height="1920" style="display:none;"></canvas>
+
+  <script>
+    /* ==========================================================================
+       1. DATA STRUCTURE & STATE MANAGEMENT
+       ========================================================================== */
+    const DEFAULT_ROSTER = [
+      { id: "p1", name: "Лёва", avatar: "🐱", sound: "cat", color: "#FF6B6B" },
+      { id: "p2", name: "Миша", avatar: "🚀", sound: "laser", color: "#4D96FF" },
+      { id: "p3", name: "Артём", avatar: "🦁", sound: "roar", color: "#FFD93D" },
+      { id: "p4", name: "София", avatar: "🐼", sound: "plop", color: "#6BCB77" },
+      { id: "p5", name: "Даня", avatar: "⚡️", sound: "laser", color: "#FFA900" },
+      { id: "p6", name: "Алиса", avatar: "🐺", sound: "dog", color: "#B388FF" },
+      { id: "p7", name: "Тимур", avatar: "🐯", sound: "roar", color: "#FF5252" },
+      { id: "p8", name: "Ева", avatar: "🦅", sound: "cat", color: "#00E5FF" }
+    ];
+
+    let AppState = {
+      roster: DEFAULT_ROSTER,
+      activeIds: ["p1", "p2", "p3", "p4"],
+      scores: { p1: 0, p2: 0, p3: 0, p4: 0 },
+      history: [],
+      timerDuration: 180,
+      timerRemaining: 180,
+      timerRunning: false,
+      settings: {
+        tgToken: "",
+        tgChat: ""
+      }
+    };
+
+    function loadState() {
+      const saved = localStorage.getItem("tc_state_v1");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          AppState = { ...AppState, ...parsed };
+        } catch (e) {
+          console.error("Failed to parse state", e);
+        }
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem("tc_state_v1", JSON.stringify({
+        roster: AppState.roster,
+        activeIds: AppState.activeIds,
+        scores: AppState.scores,
+        timerDuration: AppState.timerDuration,
+        settings: AppState.settings
+      }));
+    }
+
+    /* ==========================================================================
+       2. PROCEDURAL SOUND SYNTHESIS (Web Audio API)
+       ========================================================================== */
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playSound(type) {
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === "cat") {
+          // Meow: pitch modulation up then down
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(320, now);
+          osc.frequency.exponentialRampToValueAtTime(700, now + 0.15);
+          osc.frequency.exponentialRampToValueAtTime(400, now + 0.35);
+          gain.gain.setValueAtTime(0.3, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.38);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.4);
+        } else if (type === "laser") {
+          // Blaster / Laser: exponential drop
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(950, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.13);
+        } else if (type === "dog") {
+          // Bark: snappy square burst
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.linearRampToValueAtTime(90, now + 0.14);
+          gain.gain.setValueAtTime(0.4, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.16);
+        } else if (type === "plop" || type === "roar") {
+          // Deep resonant pop
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(140, now);
+          osc.frequency.exponentialRampToValueAtTime(450, now + 0.08);
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.19);
+        } else if (type === "whistle") {
+          // Double-frequency referee whistle
+          const o1 = ctx.createOscillator();
+          const o2 = ctx.createOscillator();
+          const g = ctx.createGain();
+          o1.frequency.setValueAtTime(2300, now);
+          o2.frequency.setValueAtTime(2850, now);
+          g.gain.setValueAtTime(0.3, now);
+          g.gain.linearRampToValueAtTime(0.01, now + 0.6);
+          o1.connect(g);
+          o2.connect(g);
+          g.connect(ctx.destination);
+          o1.start(now); o2.start(now);
+          o1.stop(now + 0.62); o2.stop(now + 0.62);
+        } else if (type === "click") {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(400, now);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.04);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        }
+      } catch (e) {
+        console.warn("AudioContext error:", e);
+      }
+    }
+
+    /* ==========================================================================
+       3. INPUT HANDLING, DEBOUNCE & UNDO
+       ========================================================================== */
+    const debounceMap = new Map();
+
+    function registerTap(playerId, cardEl) {
+      const now = Date.now();
+      const last = debounceMap.get(playerId) || 0;
+      if (now - last < 600) return; // Debounce 600ms
+      debounceMap.set(playerId, now);
+
+      getAudioContext();
+
+      // Update State
+      AppState.scores[playerId] = (AppState.scores[playerId] || 0) + 1;
+      AppState.history.push({ playerId, timestamp: now });
+
+      // Visual Feedback
+      cardEl.classList.add("flash");
+      cardEl.classList.add("debounced");
+      setTimeout(() => cardEl.classList.remove("flash"), 120);
+      setTimeout(() => cardEl.classList.remove("debounced"), 600);
+
+      // Play specific child sound
+      const player = AppState.roster.find(p => p.id === playerId);
+      playSound(player ? player.sound : "cat");
+
+      updateCardScore(playerId);
+      updateUndoButton();
+      saveState();
+    }
+
+    function undoLast() {
+      if (AppState.history.length === 0) return;
+      const lastAction = AppState.history.pop();
+      if (AppState.scores[lastAction.playerId] > 0) {
+        AppState.scores[lastAction.playerId]--;
+      }
+      playSound("click");
+      updateCardScore(lastAction.playerId);
+      updateUndoButton();
+      saveState();
+    }
+
+    function updateCardScore(playerId) {
+      const scoreEl = document.getElementById(`score-${playerId}`);
+      if (scoreEl) {
+        scoreEl.innerText = AppState.scores[playerId] || 0;
+      }
+    }
+
+    function updateUndoButton() {
+      const btn = document.getElementById("btn-undo");
+      btn.disabled = AppState.history.length === 0;
+      if (AppState.history.length > 0) {
+        const lastId = AppState.history[AppState.history.length - 1].playerId;
+        const player = AppState.roster.find(p => p.id === lastId);
+        btn.innerText = `↩ Отмена (${player ? player.name : ""})`;
+      } else {
+        btn.innerText = "↩ Отменить (-1)";
+      }
+    }
+
+    /* ==========================================================================
+       4. DYNAMIC VIEWPORT & GRID RENDERING
+       ========================================================================== */
+    function renderGrid() {
+      const grid = document.getElementById("cards-grid");
+      grid.innerHTML = "";
+      const count = AppState.activeIds.length;
+
+      grid.className = "grid-container";
+      if (count <= 2) grid.classList.add("grid-2");
+      else if (count === 3) grid.classList.add("grid-3");
+      else if (count === 4) grid.classList.add("grid-4");
+      else if (count <= 6) grid.classList.add("grid-6");
+      else grid.classList.add("grid-8");
+
+      AppState.activeIds.forEach(id => {
+        const player = AppState.roster.find(p => p.id === id);
+        if (!player) return;
+
+        const card = document.createElement("div");
+        card.className = "card";
+        card.style.borderColor = player.color;
+
+        card.innerHTML = `
+          <div class="card-avatar">${player.avatar}</div>
+          <div class="card-name">${player.name}</div>
+          <div class="card-score" id="score-${id}" style="color: ${player.color}">${AppState.scores[id] || 0}</div>
+        `;
+
+        const triggerAction = (e) => {
+          e.preventDefault();
+          registerTap(id, card);
+        };
+
+        card.addEventListener("touchstart", triggerAction, { passive: false });
+        card.addEventListener("mousedown", (e) => {
+          if (!('ontouchstart' in window)) triggerAction(e);
+        });
+
+        grid.appendChild(card);
+      });
+
+      document.getElementById("active-count").innerText = count;
+      updateUndoButton();
+    }
+
+    /* ==========================================================================
+       5. TIMER ENGINE
+       ========================================================================== */
+    let timerInterval = null;
+
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = (sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function toggleTimer() {
+      getAudioContext();
+      if (AppState.timerRunning) {
+        clearInterval(timerInterval);
+        AppState.timerRunning = false;
+        document.getElementById("session-status").innerText = "Пауза";
+      } else {
+        AppState.timerRunning = true;
+        document.getElementById("session-status").innerText = "Идет упражнение";
+        playSound("click");
+        timerInterval = setInterval(() => {
+          if (AppState.timerRemaining > 0) {
+            AppState.timerRemaining--;
+            document.getElementById("timer-label").innerText = formatTime(AppState.timerRemaining);
+          } else {
+            clearInterval(timerInterval);
+            AppState.timerRunning = false;
+            playSound("whistle");
+            finishSession();
+          }
+        }, 1000);
+      }
+    }
+
+    /* ==========================================================================
+       6. PODIUM, RANKING & SHARING (Telegram + Canvas Stories)
+       ========================================================================== */
+    function finishSession() {
+      if (AppState.timerRunning) {
+        clearInterval(timerInterval);
+        AppState.timerRunning = false;
+      }
+      playSound("whistle");
+
+      const sorted = AppState.activeIds
+        .map(id => ({
+          ...AppState.roster.find(p => p.id === id),
+          score: AppState.scores[id] || 0
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      const podiumContainer = document.getElementById("podium-results-container");
+      podiumContainer.innerHTML = "";
+
+      sorted.forEach((p, index) => {
+        const item = document.createElement("div");
+        item.className = `podium-item ${index === 0 ? 'p-1' : index === 1 ? 'p-2' : index === 2 ? 'p-3' : ''}`;
+        const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `${index + 1}.`;
+        item.innerHTML = `
+          <div style="display:flex; align-items:center; gap:10px;">
+            <span class="podium-rank">${medal}</span>
+            <span style="font-size:22px;">${p.avatar}</span>
+            <span style="font-size:18px; font-weight:700;">${p.name}</span>
+          </div>
+          <div class="podium-score">${p.score}</div>
+        `;
+        podiumContainer.appendChild(item);
+      });
+
+      document.getElementById("modal-podium").classList.add("active");
+    }
+
+    async function sendTelegramReport() {
+      const token = AppState.settings.tgToken;
+      const chat = AppState.settings.tgChat;
+
+      const sorted = AppState.activeIds
+        .map(id => ({
+          ...AppState.roster.find(p => p.id === id),
+          score: AppState.scores[id] || 0
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      const dateStr = new Date().toLocaleDateString("ru-RU", { day: 'numeric', month: 'long' });
+      let text = `🏆 <b>Итоги упражнения (${dateStr})</b>\n\n`;
+      sorted.forEach((p, idx) => {
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : "•";
+        text += `${medal} <b>${p.name}</b> (${p.avatar}): ${p.score}\n`;
+      });
+      text += `\n🔥 <i>Отличная работа на корте!</i>`;
+
+      if (!token || !chat) {
+        navigator.clipboard.writeText(text.replace(/<[^>]*>/g, ''));
+        alert("Токен Telegram не задан в настройках. Отчет скопирован в буфер обмена!");
+        return;
+      }
+
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chat, text: text, parse_mode: "HTML" })
+        });
+        if (res.ok) alert("Отчет отправлен в канал Telegram!");
+        else throw new Error();
+      } catch (e) {
+        navigator.clipboard.writeText(text.replace(/<[^>]*>/g, ''));
+        alert("Не удалось отправить по сети. Результат скопирован в буфер обмена.");
+      }
+    }
+
+    async function generateAndShareStories() {
+      const canvas = document.getElementById("stories-canvas");
+      const ctx = canvas.getContext("2d");
+
+      // 1. Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, "#0d1117");
+      grad.addColorStop(1, "#161b22");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      // 2. Header text
+      ctx.fillStyle = "#58a6ff";
+      ctx.font = "bold 52px -apple-system, sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("ТРЕНИРОВОЧНЫЙ СЧЕТЧИК", 540, 180);
+
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 76px -apple-system, sans-serif";
+      ctx.fillText("ИТОГИ СЕРИИ", 540, 270);
+
+      const dateStr = new Date().toLocaleDateString("ru-RU", { day: 'numeric', month: 'long', year: 'numeric' });
+      ctx.fillStyle = "#8b949e";
+      ctx.font = "36px -apple-system, sans-serif";
+      ctx.fillText(dateStr, 540, 340);
+
+      // 3. Render Top list
+      const sorted = AppState.activeIds
+        .map(id => ({
+          ...AppState.roster.find(p => p.id === id),
+          score: AppState.scores[id] || 0
+        }))
+        .sort((a, b) => b.score - a.score);
+
+      let startY = 460;
+      const rowHeight = 150;
+
+      sorted.slice(0, 6).forEach((p, idx) => {
+        ctx.fillStyle = "#21262d";
+        ctx.beginPath();
+        ctx.roundRect(100, startY, 880, 120, [24]);
+        ctx.fill();
+
+        if (idx === 0) { ctx.lineWidth = 4; ctx.strokeStyle = "#ffd700"; ctx.stroke(); }
+        else if (idx === 1) { ctx.lineWidth = 3; ctx.strokeStyle = "#c0c0c0"; ctx.stroke(); }
+        else if (idx === 2) { ctx.lineWidth = 3; ctx.strokeStyle = "#cd7f32"; ctx.stroke(); }
+
+        const medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`;
+        ctx.textAlign = "left";
+        ctx.font = "bold 44px -apple-system, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(medal, 140, startY + 76);
+
+        ctx.font = "52px -apple-system, sans-serif";
+        ctx.fillText(p.avatar, 230, startY + 80);
+
+        ctx.font = "bold 44px -apple-system, sans-serif";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillText(p.name, 320, startY + 76);
+
+        ctx.textAlign = "right";
+        ctx.font = "bold 56px -apple-system, sans-serif";
+        ctx.fillStyle = "#58a6ff";
+        ctx.fillText(`${p.score}`, 930, startY + 80);
+
+        startY += rowHeight;
+      });
+
+      canvas.toBlob(async (blob) => {
+        const file = new File([blob], "training-results.png", { type: "image/png" });
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+          try {
+            await navigator.share({
+              files: [file],
+              title: "Итоги тренировки",
+              text: "Результаты упражнения на корте!"
+            });
+          } catch (e) {
+            console.log("Share dismissed");
+          }
+        } else {
+          // Fallback download
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "training-results.png";
+          a.click();
+          URL.revokeObjectURL(url);
+          alert("Открытка сохранена на устройство!");
+        }
+      }, "image/png");
+    }
+
+    /* ==========================================================================
+       7. ROSTER CHECKIN MODAL LOGIC
+       ========================================================================== */
+    function openRosterModal() {
+      const container = document.getElementById("roster-items-container");
+      container.innerHTML = "";
+
+      AppState.roster.forEach(player => {
+        const isSelected = AppState.activeIds.includes(player.id);
+        const item = document.createElement("div");
+        item.className = `roster-item ${isSelected ? 'selected' : ''}`;
+        item.innerHTML = `
+          <div class="roster-left">
+            <span>${player.avatar}</span>
+            <span>${player.name}</span>
+          </div>
+          <span style="font-size:20px;">${isSelected ? '✅' : '⚪️'}</span>
+        `;
+        item.onclick = () => {
+          if (AppState.activeIds.includes(player.id)) {
+            if (AppState.activeIds.length <= 2) {
+              alert("Минимум 2 участника на корте.");
+              return;
+            }
+            AppState.activeIds = AppState.activeIds.filter(id => id !== player.id);
+          } else {
+            if (AppState.activeIds.length >= 8) {
+              alert("Максимум 8 участников на одном экране.");
+              return;
+            }
+            AppState.activeIds.push(player.id);
+          }
+          openRosterModal();
+        };
+        container.appendChild(item);
+      });
+
+      document.getElementById("modal-roster").classList.add("active");
+    }
+
+    function initSettings() {
+      document.getElementById("cfg-tg-token").value = AppState.settings.tgToken || "";
+      document.getElementById("cfg-tg-chat").value = AppState.settings.tgChat || "";
+      document.getElementById("cfg-timer-sec").value = AppState.timerDuration || 180;
+    }
+
+    /* ==========================================================================
+       8. INITIALIZATION & ATTACHMENTS
+       ========================================================================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      loadState();
+      renderGrid();
+
+      document.getElementById("btn-undo").addEventListener("click", undoLast);
+      document.getElementById("btn-finish").addEventListener("click", finishSession);
+      document.getElementById("btn-timer-toggle").addEventListener("click", toggleTimer);
+
+      document.getElementById("btn-roster-open").addEventListener("click", openRosterModal);
+      document.getElementById("btn-roster-close").addEventListener("click", () => {
+        document.getElementById("modal-roster").classList.remove("active");
+        renderGrid();
+        saveState();
+      });
+
+      document.getElementById("btn-settings-open").addEventListener("click", () => {
+        initSettings();
+        document.getElementById("modal-settings").classList.add("active");
+      });
+
+      document.getElementById("btn-settings-save").addEventListener("click", () => {
+        AppState.settings.tgToken = document.getElementById("cfg-tg-token").value.trim();
+        AppState.settings.tgChat = document.getElementById("cfg-tg-chat").value.trim();
+        const duration = parseInt(document.getElementById("cfg-timer-sec").value, 10);
+        if (!isNaN(duration) && duration > 0) {
+          AppState.timerDuration = duration;
+          AppState.timerRemaining = duration;
+          document.getElementById("timer-label").innerText = formatTime(duration);
+        }
+        document.getElementById("modal-settings").classList.remove("active");
+        saveState();
+      });
+
+      document.getElementById("btn-share-tg").addEventListener("click", sendTelegramReport);
+      document.getElementById("btn-share-stories").addEventListener("click", generateAndShareStories);
+      document.getElementById("btn-podium-restart").addEventListener("click", () => {
+        document.getElementById("modal-podium").classList.remove("active");
+        AppState.scores = {};
+        AppState.history = [];
+        AppState.timerRemaining = AppState.timerDuration;
+        document.getElementById("timer-label").innerText = formatTime(AppState.timerRemaining);
+        document.getElementById("session-status").innerText = "Готов";
+        renderGrid();
+        saveState();
+      });
+    });
+  </script>
+</body>
+</html>
